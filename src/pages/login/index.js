@@ -47,7 +47,7 @@ function Login() {
             <Link to="#">
               <img
                 className="block-center rounded"
-                src="/img/logo3.png"
+                src="/img/saloon-logo.png"
             alt="App Logo"
                 style={{ width: "100px", height: "80px" }}
               />
@@ -119,7 +119,6 @@ function Login() {
                 Login
               </button>
             </form>
-           
           </div>
         </div>
         <div className="p-3 text-center">
@@ -128,7 +127,7 @@ function Login() {
           <span className="mr-2">-</span>
           <span>
             <a target={"_blank"}>
-              apnamandal.com
+            saloni-next.vercel.app
             </a>
           </span>
           <br />

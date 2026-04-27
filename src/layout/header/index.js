@@ -13,7 +13,7 @@ function Header() {
         <div className="brand-logo" style={{ marginLeft: "3.25rem" }}>
           <img
             className="img-fluid"
-            src="/img/logo.png"
+            src="/img/saloon-logo.png"
             alt="App Logo"
             style={{ width: "90px", height: "50px" }}
           />
