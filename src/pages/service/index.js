@@ -1,9 +1,10 @@
 import React, { useState } from "react";
+import ConfirmationModal from "../../common/ConfirmationModal";
 import {
   useServices,
   useDeleteService,
   useUpdateService,
-  useCreateService
+  useCreateService,
 } from "../../hooks/useService";
 
 function Service() {
@@ -12,7 +13,7 @@ function Service() {
   const { data, isLoading, isError, error } = useServices(filters);
   const { mutate: deleteService, isPending: isDeleting } = useDeleteService();
   const { mutate: updateService } = useUpdateService();
-  const { mutate: createService, isPending: isCreating } = useCreateService();
+  const { mutate: createService } = useCreateService();
 
   const services = data?.data || [];
   const pagination = data?.pagination || null;
@@ -21,16 +22,29 @@ function Service() {
   const [isEdit, setIsEdit] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
 
+  // ✅ Delete Modal State
+  const [serviceToDelete, setServiceToDelete] = useState(null);
+
   const [formData, setFormData] = useState({
     name: "",
     price: "",
     description: "",
   });
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this service?")) {
-      deleteService(id);
-    }
+  // ✅ Open Delete Modal
+  const handleDeleteClick = (service) => {
+    setServiceToDelete(service);
+  };
+
+  // ✅ Confirm Delete
+  const handleDelete = () => {
+    if (!serviceToDelete) return;
+
+    deleteService(serviceToDelete._id, {
+      onSuccess: () => {
+        setServiceToDelete(null);
+      },
+    });
   };
 
   const handlePageChange = (newPage) => {
@@ -59,6 +73,7 @@ function Service() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -83,7 +98,11 @@ function Service() {
   const handleClose = () => {
     setShowModal(false);
     setSelectedService(null);
-    setFormData({ name: "", price: "", description: "" });
+    setFormData({
+      name: "",
+      price: "",
+      description: "",
+    });
   };
 
   return (
@@ -91,6 +110,7 @@ function Service() {
       <div className="card shadow-sm">
         <div className="card-header bg-light d-flex justify-content-between align-items-center p-3">
           <h4 className="mb-0 text-primary-emphasis">Services</h4>
+
           <button className="btn btn-success" onClick={handleAdd}>
             <i className="fas fa-plus me-2"></i>
             Add New Service
@@ -98,11 +118,7 @@ function Service() {
         </div>
 
         <div className="card-body">
-          {isLoading && (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary"></div>
-            </div>
-          )}
+          {isLoading && <div className="text-center">Loading...</div>}
 
           {isError && (
             <div className="alert alert-danger">
@@ -124,151 +140,93 @@ function Service() {
                 </thead>
 
                 <tbody>
-                  {services.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="text-center py-4">
-                        No services found.
+                  {services.map((service, index) => (
+                    <tr key={service._id}>
+                      <td>
+                        {(filters.page - 1) * filters.limit + index + 1}
+                      </td>
+
+                      <td>{service.name}</td>
+
+                      <td>₹{service.price}</td>
+
+                      <td>{service.description || "—"}</td>
+
+                      <td className="text-center">
+                        <button
+                          className="btn btn-sm btn-outline-secondary me-2"
+                          onClick={() => handleEdit(service)}
+                        >
+                          <i className="fas fa-pencil-alt"></i>
+                        </button>
+
+                        {/* ✅ Delete Button */}
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDeleteClick(service)}
+                        >
+                          <i className="fas fa-trash"></i>
+                        </button>
                       </td>
                     </tr>
-                  ) : (
-                    services.map((service, index) => (
-                      <tr key={service._id}>
-                        <td>
-                          {(filters.page - 1) * filters.limit + index + 1}
-                        </td>
-
-                        <td className="fw-bold">{service.name}</td>
-
-                        <td>₹{service.price}</td>
-
-                        <td style={{ maxWidth: "200px" }}>
-                          {service.description || "—"}
-                        </td>
-
-                        <td className="text-center">
-                          <button
-                            className="btn btn-sm btn-outline-secondary me-2"
-                            onClick={() => handleEdit(service)}
-                          >
-                            <i className="fas fa-pencil-alt"></i>
-                          </button>
-
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleDelete(service._id)}
-                            disabled={isDeleting}
-                          >
-                            <i className="fas fa-trash"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
+                  ))}
                 </tbody>
               </table>
-            </div>
-          )}
-
-          {pagination && pagination.totalPages > 1 && (
-            <div className="d-flex justify-content-between mt-3">
-              <small>
-                Showing{" "}
-                {(pagination.page - 1) * pagination.limit + 1}–
-                {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
-                of {pagination.total}
-              </small>
-
-              <ul className="pagination pagination-sm">
-                <li
-                  className={`page-item ${pagination.page === 1 && "disabled"}`}
-                >
-                  <button
-                    className="page-link"
-                    onClick={() => handlePageChange(pagination.page - 1)}
-                  >
-                    «
-                  </button>
-                </li>
-                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(
-                  (p) => (
-                    <li key={p} className={`page-item ${p === pagination.page && "active"}`}>
-                      <button className="page-link" onClick={() => handlePageChange(p)}>
-                        {p}
-                      </button>
-                    </li>
-                  )
-                )}
-                <li
-                  className={`page-item ${
-                    pagination.page === pagination.totalPages && "disabled"
-                  }`}
-                >
-                  <button
-                    className="page-link"
-                    onClick={() => handlePageChange(pagination.page + 1)}
-                  >
-                    »
-                  </button>
-                </li>
-              </ul>
             </div>
           )}
         </div>
       </div>
 
+      {/* ================= Add/Edit Modal ================= */}
       {showModal && (
         <>
           <div className="modal fade show d-block">
-            <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">
-                    {isEdit ? "Edit Service" : "Add Service"}
-                  </h5>
+                  <h5>{isEdit ? "Edit Service" : "Add Service"}</h5>
                   <button className="btn-close" onClick={handleClose}></button>
                 </div>
 
                 <form onSubmit={handleSubmit}>
                   <div className="modal-body">
-                    <div className="mb-3">
-                      <label>Name</label>
-                      <input
-                        className="form-control"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
+                    <input
+                      className="form-control mb-3"
+                      name="name"
+                      placeholder="Name"
+                      value={formData.name}
+                      onChange={handleChange}
+                    />
 
-                    <div className="mb-3">
-                      <label>Price</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        name="price"
-                        value={formData.price}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
+                    <input
+                      className="form-control mb-3"
+                      name="price"
+                      placeholder="Price"
+                      value={formData.price}
+                      onChange={handleChange}
+                    />
 
-                    <div className="mb-3">
-                      <label>Description</label>
-                      <textarea
-                        className="form-control"
-                        name="description"
-                        value={formData.description}
-                        onChange={handleChange}
-                      />
-                    </div>
+                    <textarea
+                      className="form-control"
+                      name="description"
+                      placeholder="Description"
+                      value={formData.description}
+                      onChange={handleChange}
+                    />
                   </div>
 
                   <div className="modal-footer">
-                    <button type="button" className="btn btn-secondary" onClick={handleClose}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={handleClose}
+                    >
                       Cancel
                     </button>
-                    <button className="btn btn-primary">{isEdit ? "Update" : "Create"}</button>
+
+                    <button className="btn btn-primary">
+                      {isEdit ? "Update" : "Create"}
+                    </button>
                   </div>
                 </form>
               </div>
@@ -278,6 +236,25 @@ function Service() {
           <div className="modal-backdrop fade show"></div>
         </>
       )}
+
+      {/* ================= Delete Confirmation Modal ================= */}
+      <ConfirmationModal
+        show={serviceToDelete !== null}
+        onClose={() => setServiceToDelete(null)}
+        onConfirm={handleDelete}
+        title="Confirm Deletion"
+        confirmText="Delete"
+        isLoading={isDeleting}
+        confirmButtonVariant="danger"
+      >
+        <p className="fs-5 text-center">
+          Are you sure you want to delete{" "}
+          <strong className="text-danger">
+            {serviceToDelete?.name}
+          </strong>
+          ?
+        </p>
+      </ConfirmationModal>
     </div>
   );
 }
