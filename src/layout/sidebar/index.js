@@ -1,0 +1,170 @@
+import { memo, useEffect, useCallback } from "react";
+import { Badge } from "react-bootstrap";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useLocation } from "react-router-dom";
+import Menu from "../../Menu.js";
+import { setCollapse } from "../../store/sidebar";
+
+function Sidebar() {
+  const location = useLocation();
+  const dispatch = useDispatch();
+  const collapse = useSelector((state) => state?.sidebarReducer?.collapse);
+
+  /**
+   * Check if route is active
+   */
+  const routeActive = useCallback(
+    (paths) => {
+      paths = Array.isArray(paths) ? paths : [paths];
+      return paths.some((p) => location.pathname === p);
+    },
+    [location.pathname]
+  );
+
+  /**
+   * Initialize / update collapse state when route changes
+   */
+  useEffect(() => {
+    const newCollapse = {};
+
+    Menu.filter(({ heading }) => !heading).forEach(
+      ({ name, path, submenu }) => {
+        newCollapse[name] = routeActive(
+          submenu ? submenu.map(({ path }) => path) : path
+        );
+      }
+    );
+
+    dispatch(setCollapse(newCollapse));
+  }, [dispatch, routeActive]);
+
+  /**
+   * Toggle submenu collapse
+   */
+  const toggleItemCollapse = (stateName) => {
+    const newCollapse = { ...collapse };
+
+    Object.keys(newCollapse).forEach((key) => {
+      if (key !== stateName) newCollapse[key] = false;
+    });
+
+    newCollapse[stateName] = !newCollapse[stateName];
+    dispatch(setCollapse(newCollapse));
+  };
+
+  const getSubRoutes = (item) => item.submenu.map(({ path }) => path);
+
+  /**
+   * Sidebar Header
+   */
+  const SidebarItemHeader = ({ item }) => (
+    <li className="nav-heading">
+      <span>{item.heading}</span>
+    </li>
+  );
+
+  /**
+   * Normal Menu Item
+   */
+  const SidebarItem = ({ item, isActive }) => (
+    <li className={isActive ? "active" : ""}>
+      <Link to={item.path} title={item.name}>
+        {item.label && (
+          <Badge bg={item.label.color} className="float-end">
+            {item.label.value}
+          </Badge>
+        )}
+        {item.icon && <item.icon className="mr-2" size={18} />}
+        <span className="align-middle">{item.name}</span>
+      </Link>
+    </li>
+  );
+
+
+  const SidebarSubItem = ({
+    item,
+    isActive,
+    isOpen,
+    handler,
+    children,
+  }) => (
+    <li className={isActive ? "active" : ""}>
+      <div
+        className="nav-item d-flex align-items-center justify-content-between"
+        onClick={handler}
+        style={{ cursor: "pointer" }}
+      >
+        <div className="d-flex align-items-center">
+          {item.icon && <item.icon className="mr-2" size={18} />}
+          <span>{item.name}</span>
+        </div>
+        <span>{isOpen ? "▾" : "▸"}</span>
+      </div>
+
+      {isOpen && <ul className="sidebar-subnav">{children}</ul>}
+    </li>
+  );
+
+  /**
+   * Detect item type
+   */
+  const itemType = (item) => {
+    if (item.heading) return "heading";
+    if (!item.submenu) return "menu";
+    return "submenu";
+  };
+
+  return (
+    <aside className="aside-container">
+      <div className="aside-inner">
+        <nav className="sidebar">
+          <ul className="sidebar-nav">
+            <li className="has-user-block"></li>
+
+            {Menu.map((item, i) => {
+              const type = itemType(item);
+
+              if (type === "heading") {
+                return <SidebarItemHeader item={item} key={i} />;
+              }
+
+              if (type === "menu") {
+                return (
+                  <SidebarItem
+                    key={i}
+                    item={item}
+                    isActive={routeActive(item.path)}
+                  />
+                );
+              }
+
+              if (type === "submenu") {
+                return (
+                  <SidebarSubItem
+                    key={i}
+                    item={item}
+                    isOpen={collapse?.[item.name]}
+                    isActive={routeActive(getSubRoutes(item))}
+                    handler={() => toggleItemCollapse(item.name)}
+                  >
+                    {item.submenu.map((subitem, idx) => (
+                      <SidebarItem
+                        key={idx}
+                        item={subitem}
+                        isActive={routeActive(subitem.path)}
+                      />
+                    ))}
+                  </SidebarSubItem>
+                );
+              }
+
+              return null;
+            })}
+          </ul>
+        </nav>
+      </div>
+    </aside>
+  );
+}
+
+export default memo(Sidebar);
