@@ -145,28 +145,24 @@ function Service() {
                       <td>
                         {(filters.page - 1) * filters.limit + index + 1}
                       </td>
-
                       <td>{service.name}</td>
-
                       <td>₹{service.price}</td>
-
                       <td>{service.description || "—"}</td>
-
-                      <td className="text-center">
-                        <button
-                          className="btn btn-sm btn-outline-secondary me-2"
-                          onClick={() => handleEdit(service)}
-                        >
-                          <i className="fas fa-pencil-alt"></i>
-                        </button>
-
-                        {/* ✅ Delete Button */}
-                        <button
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => handleDeleteClick(service)}
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
+                      <td className="text-center" style={{ minWidth: "95px" }}>
+                        <div className="d-flex justify-content-center align-items-center flex-nowrap gap-2">                         
+                          <button
+                            className="btn btn-sm btn-outline-secondary mr-2"
+                            onClick={() => handleEdit(service)}
+                          >
+                            <i className="fas fa-pencil-alt"></i>
+                          </button>
+                          <button
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => handleDeleteClick(service)}
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

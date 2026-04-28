@@ -5,6 +5,7 @@ import { useDashboardStats } from "../../hooks/useDashboard";
 
 function Dashboard() {
   const { data: dashboard, isLoading, isError } = useDashboardStats();
+  console.log("Dashboard stats:", dashboard, "Loading:", isLoading, "Error:", isError);
 
   const renderCard = (
     title,

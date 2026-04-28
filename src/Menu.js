@@ -35,9 +35,19 @@ const Menu = [
     icon: FiUsers,
   },
   {
-    name: "Contacts",
+    name: "Contact Details",
     path: "/contact",
     icon: FiFileText,
+  },
+  {
+    name: "Contact Requests",
+    path: "/contact-us",
+    icon: FiUser,
+  },
+  {
+    name: "FAQ",
+    path: "/faq",
+    icon: FiBookOpen,
   }
 ];
 

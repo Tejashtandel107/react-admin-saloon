@@ -15,6 +15,14 @@ const dashboardCards = [
     valueKey: "bookings", 
     description: "God Master",
     bgClass: "bg-primary-light",
+  },
+  {
+    name: "Faqs",
+    path: "/faq",
+    icon: "icon-people",
+    valueKey: "faqs", 
+    description: "Frequently Asked Questions",
+    bgClass: "bg-success-light",
   }
 ];
 

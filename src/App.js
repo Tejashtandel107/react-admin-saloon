@@ -16,6 +16,8 @@ import { IsTokenExpired } from "./common/jwtToken";
 import ErrorBoundary from "./common/ErrorBoundary";
 import GlobalLoader from "./components/GlobalLoader";
 import Contact from "./pages/contact/index";
+import FaqPage from "./pages/faq";
+import ContactUsList from "./pages/contact-us";
 
 function App() {
   const navigate = useNavigate();
@@ -41,6 +43,8 @@ function App() {
             <Route path="/service" element={<Service />} />
             <Route path="/booking" element={<Booking />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/faq" element={<FaqPage />} />
+            <Route path="/contact-us" element={<ContactUsList />} />
           </Route>
           <Route element={<PrivateRoute />}>
             <Route path="/" element={<Login />} />

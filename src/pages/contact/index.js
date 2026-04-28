@@ -37,7 +37,7 @@ function ContactPage() {
     <div className="container-fluid px-0">
       <div className="card shadow-sm">
         <div className="card-header bg-light">
-          <h4>Contact Information</h4>
+          <h4>Contact Details</h4>
         </div>
         <div className="card-body">
           <form onSubmit={handleSubmit}>
