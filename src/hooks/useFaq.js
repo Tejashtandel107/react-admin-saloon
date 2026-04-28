@@ -50,6 +50,7 @@ export const useCreateFaq = () => {
     onSuccess: () => {
       toast.success("FAQ created successfully");
       queryClient.invalidateQueries(["faqs"]);
+      queryClient.invalidateQueries(["dashboardStats"]);
     },
   });
 };
@@ -74,6 +75,7 @@ export const useDeleteFaq = () => {
     onSuccess: () => {
       toast.success("FAQ deleted successfully");
       queryClient.invalidateQueries(["faqs"]);
+      queryClient.invalidateQueries(["dashboardStats"]);
     },
   });
 };
