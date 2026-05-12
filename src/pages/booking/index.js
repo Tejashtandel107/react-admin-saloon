@@ -1,13 +1,42 @@
-import React, { useState } from "react";
-import { useBookings } from "../../hooks/useBooking";
+import React, { useEffect, useState, useCallback } from "react";
+import httpService from "../../common/http.service";
 
 function BookingList() {
-  const [filters, setFilters] = useState({ page: 1, limit: 10 });
-  const { data, isLoading, isError, error } = useBookings(filters);
-  const bookings = data?.data || data || [];
-  const pagination = data?.pagination || null;
+  const [filters, setFilters] = useState({page: 1,limit: 10});
+  const [bookings, setBookings] = useState([]);
+  const [pagination, setPagination] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchBookings = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const queryString = new URLSearchParams(filters).toString();
+      const url = `/bookings?${queryString}`;
+
+      const { data } = await httpService.get(url);
+
+      setBookings(data?.data?.bookings || []);
+      setPagination(data?.data?.pagination || null);
+    } catch (err) {
+      setError("Failed to load bookings");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
+
   const handlePageChange = (newPage) => {
-    setFilters((prev) => ({ ...prev, page: newPage }));
+    setFilters((prev) => ({
+      ...prev,
+      page: newPage,
+    }));
   };
 
   return (
@@ -18,10 +47,17 @@ function BookingList() {
         </div>
 
         <div className="card-body">
-          {isLoading && <div className="text-center py-5"><div className="spinner-border text-primary"></div></div>}
-          {isError && <div className="alert alert-danger">{error?.message || "Failed to load bookings"}</div>}
+          {loading && (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary"></div>
+            </div>
+          )}
 
-          {!isLoading && !isError && (
+          {error && (
+            <div className="alert alert-danger">{error}</div>
+          )}
+
+          {!loading && !error && (
             <div className="table-responsive">
               <table className="table table-hover align-middle">
                 <thead className="table-light">
@@ -35,20 +71,27 @@ function BookingList() {
                     <th>Status</th>
                   </tr>
                 </thead>
+
                 <tbody>
                   {bookings.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-4">No bookings found.</td>
+                      <td colSpan={7} className="text-center py-4">
+                        No bookings found.
+                      </td>
                     </tr>
                   ) : (
                     bookings.map((booking, index) => (
                       <tr key={booking._id}>
-                        <td>{(filters.page - 1) * filters.limit + index + 1}</td>
+                        <td>
+                          {(filters.page - 1) * filters.limit + index + 1}
+                        </td>
                         <td>{booking.name}</td>
                         <td>{booking.email}</td>
                         <td>{booking.phone}</td>
                         <td>{booking.serviceId?.name || "—"}</td>
-                        <td>{new Date(booking.bookingDateTime).toLocaleString()}</td>
+                        <td>
+                          {new Date(booking.bookingDateTime).toLocaleString()}
+                        </td>
                         <td>{booking.status || "Pending"}</td>
                       </tr>
                     ))
@@ -62,20 +105,63 @@ function BookingList() {
             <div className="d-flex justify-content-between mt-3 align-items-center">
               <small>
                 Showing {(pagination.page - 1) * pagination.limit + 1}–
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
+                {Math.min(
+                  pagination.page * pagination.limit,
+                  pagination.total
+                )}{" "}
+                of {pagination.total}
               </small>
 
               <ul className="pagination pagination-sm mb-0">
-                <li className={`page-item ${pagination.page === 1 && "disabled"}`}>
-                  <button className="page-link" onClick={() => handlePageChange(pagination.page - 1)}>«</button>
+                <li
+                  className={`page-item ${
+                    pagination.page === 1 ? "disabled" : ""
+                  }`}
+                >
+                  <button
+                    className="page-link"
+                    onClick={() =>
+                      handlePageChange(pagination.page - 1)
+                    }
+                  >
+                    «
+                  </button>
                 </li>
-                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(p => (
-                  <li key={p} className={`page-item ${p === pagination.page && "active"}`}>
-                    <button className="page-link" onClick={() => handlePageChange(p)}>{p}</button>
+
+                {Array.from(
+                  { length: pagination.totalPages },
+                  (_, i) => i + 1
+                ).map((p) => (
+                  <li
+                    key={p}
+                    className={`page-item ${
+                      p === pagination.page ? "active" : ""
+                    }`}
+                  >
+                    <button
+                      className="page-link"
+                      onClick={() => handlePageChange(p)}
+                    >
+                      {p}
+                    </button>
                   </li>
                 ))}
-                <li className={`page-item ${pagination.page === pagination.totalPages && "disabled"}`}>
-                  <button className="page-link" onClick={() => handlePageChange(pagination.page + 1)}>»</button>
+
+                <li
+                  className={`page-item ${
+                    pagination.page === pagination.totalPages
+                      ? "disabled"
+                      : ""
+                  }`}
+                >
+                  <button
+                    className="page-link"
+                    onClick={() =>
+                      handlePageChange(pagination.page + 1)
+                    }
+                  >
+                    »
+                  </button>
                 </li>
               </ul>
             </div>
